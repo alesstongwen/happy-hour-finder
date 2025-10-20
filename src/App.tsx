@@ -21,7 +21,7 @@ function App() {
       <input
         type="text"
         className="border p-2 w-full mb-2"
-        placeholder="Enter a postal code (e.g., V6B 3H7)"
+        placeholder="Enter a postal code"
         value={postalCode}
         onChange={(e) => setPostalCode(e.target.value)}
       />
