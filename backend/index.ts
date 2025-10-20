@@ -88,7 +88,20 @@ const server = createServer(async (req, res) => {
           return;
         }
         
-        const coords = geoData.results?.[0]?.geometry;
+        // Find the best result - prioritize US results for postal codes like 10001
+        let bestResult = geoData.results?.[0];
+        if (geoData.results && geoData.results.length > 1) {
+          // Look for US result if multiple results exist
+          const usResult = geoData.results.find((result: any) => 
+            result.components?.country_code === 'us'
+          );
+          if (usResult) {
+            bestResult = usResult;
+            console.log("Found US result, using:", bestResult.formatted);
+          }
+        }
+        
+        const coords = bestResult?.geometry;
         if (!coords) {
           const responseData = JSON.stringify({ error: "Invalid postal code" });
           res.writeHead(404);
@@ -115,7 +128,7 @@ const server = createServer(async (req, res) => {
           const responseData = JSON.stringify({
             message: `No happy hours found near ${postalCode}. Our sample data is in New York area (try 10001).`,
             postalCode,
-            location: geoData.results[0]?.formatted || "Unknown location",
+            location: bestResult?.formatted || "Unknown location",
             results: []
           });
           
@@ -127,7 +140,7 @@ const server = createServer(async (req, res) => {
         const responseData = JSON.stringify({
           message: `Found ${result.rows.length} happy hour(s) near ${postalCode}`,
           postalCode,
-          location: geoData.results[0]?.formatted || "Unknown location", 
+          location: bestResult?.formatted || "Unknown location", 
           results: result.rows
         });
         
