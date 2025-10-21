@@ -19,7 +19,9 @@ function App() {
     try {
       const searchUrl = `/api/search?postalCode=${encodeURIComponent(
         postalCode
-      )}${useRealData ? "&real=true" : ""}${ignoreTime ? "&ignoreTime=true" : ""}`;
+      )}${useRealData ? "&real=true" : ""}${
+        ignoreTime ? "&ignoreTime=true" : ""
+      }`;
       console.log("Searching with:", {
         postalCode,
         useRealData,
@@ -86,7 +88,7 @@ function App() {
               {useRealData ? "🌐" : "📝 (Sample data)"}
             </span>
           </label>
-          
+
           {!useRealData && (
             <label className="flex items-center gap-2">
               <input
@@ -95,9 +97,7 @@ function App() {
                 onChange={(e) => setIgnoreTime(e.target.checked)}
                 className="rounded"
               />
-              <span className="text-sm">
-                Show all places (ignore time) 🕐
-              </span>
+              <span className="text-sm">Show all places (ignore time) 🕐</span>
             </label>
           )}
         </div>
