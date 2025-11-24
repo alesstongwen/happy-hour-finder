@@ -36,6 +36,7 @@ function App() {
 
       const data = await res.json();
       console.log("Search response:", data);
+      console.log("First result details:", data.results?.[0]); // Log first result for debugging
 
       // Handle response based on data source
       if (data.message && data.results !== undefined) {
@@ -155,7 +156,7 @@ function App() {
               )}
 
               {/* Google Places data format */}
-              {place.source === "google_places" && (
+              {(place.source === "google_places" || place.source === "google_places_enhanced" || place.source === "google_places_enhanced_mining") && (
                 <div className="text-sm text-gray-700">
                   {place.types && (
                     <p className="mb-1">
@@ -188,6 +189,92 @@ function App() {
                         ? "🟢 Open now"
                         : "🔴 Closed"}
                     </p>
+                  )}
+
+                  {/* Happy Hour Analysis */}
+                  {(place.happy_hour_confidence !== undefined || place.review_mining || place.likely_has_happy_hour) && (
+                    <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded">
+                      <p className="font-medium text-amber-800 mb-1">
+                        🍸 Happy Hour Analysis {place.happy_hour_confidence !== undefined ? `(${place.happy_hour_confidence}% confidence)` : ''}
+                      </p>
+                      
+                      {/* Debug info - remove later */}
+                      <div className="text-xs text-gray-500 mb-2">
+                        Debug: confidence={place.happy_hour_confidence}, likely={place.likely_has_happy_hour ? 'yes' : 'no'}, 
+                        mining={place.review_mining ? 'yes' : 'no'}
+                      </div>
+                      
+                      {/* Review Mining Summary */}
+                      {place.review_mining?.summary && (
+                        <div className="mt-2">
+                          {place.review_mining.summary.times && place.review_mining.summary.times.length > 0 && (
+                            <p className="text-sm text-amber-700 mb-1">
+                              🕐 Times: {place.review_mining.summary.times.map((t: any) => `${t.start}-${t.end}`).join(", ")}
+                            </p>
+                          )}
+                          
+                          {place.review_mining.summary.deals && place.review_mining.summary.deals.length > 0 && (
+                            <p className="text-sm text-amber-700 mb-1">
+                              💸 Deals: {place.review_mining.summary.deals.join(", ")}
+                            </p>
+                          )}
+                          
+                          {place.review_mining.summary.days && place.review_mining.summary.days.length > 0 && (
+                            <p className="text-sm text-amber-700 mb-1">
+                              📅 Days: {place.review_mining.summary.days.join(", ")}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Show message if no specific details found */}
+                      {(!place.review_mining?.summary?.times || place.review_mining.summary.times.length === 0) &&
+                       (!place.review_mining?.summary?.deals || place.review_mining.summary.deals.length === 0) && (
+                        <p className="text-sm text-amber-600">
+                          {place.likely_has_happy_hour ? 'Likely has happy hour based on venue type and characteristics' : 'No specific happy hour details extracted from reviews'}
+                        </p>
+                      )}
+                      
+                      {/* Review Evidence */}
+                      {place.review_mining?.happy_hour_mentions > 0 && (
+                        <p className="text-xs text-amber-600 mt-1">
+                          📝 Found evidence in {place.review_mining.happy_hour_mentions} review(s) out of {place.review_mining.total_reviews} total
+                        </p>
+                      )}
+                      
+                      {/* Sample relevant reviews */}
+                      {place.review_mining?.sample_reviews && place.review_mining.sample_reviews.length > 0 && (
+                        <details className="mt-2">
+                          <summary className="text-xs text-amber-600 cursor-pointer">
+                            View sample reviews mentioning happy hour
+                          </summary>
+                          <div className="mt-1 text-xs text-gray-600 max-h-32 overflow-y-auto">
+                            {place.review_mining.sample_reviews.map((review: any, idx: number) => (
+                              <div key={idx} className="mb-2 p-1 bg-white rounded border">
+                                <div className="font-medium">{review.author} ({review.rating}/5)</div>
+                                <div className="italic text-gray-500 text-xs mb-1">
+                                  {review.happyHourInfo?.description || review.text.substring(0, 100) + "..."}
+                                </div>
+                                {review.happyHourInfo && (
+                                  <div className="text-xs">
+                                    {review.happyHourInfo.times && review.happyHourInfo.times.length > 0 && (
+                                      <span className="inline-block mr-2 bg-blue-100 px-1 rounded">
+                                        {review.happyHourInfo.times.map((t: any) => `${t.start}-${t.end}`).join(", ")}
+                                      </span>
+                                    )}
+                                    {review.happyHourInfo.deals && review.happyHourInfo.deals.length > 0 && (
+                                      <span className="inline-block mr-2 bg-green-100 px-1 rounded">
+                                        {review.happyHourInfo.deals.slice(0, 2).join(", ")}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </details>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
